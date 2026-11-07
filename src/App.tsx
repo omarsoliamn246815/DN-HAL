@@ -1,150 +1,409 @@
 
 import React, { useState } from 'react'
 
+type Tab = 'home' | 'rooms' | 'family' | 'pirate' | 'wallet' | 'friends'
+
 const rooms = [
-  { name: 'سهرة النجوم ⭐', host: 'MO', users: 28, tag: 'نشطة الآن', color: '#7045b8' },
-  { name: 'لمة الأصدقاء ❤️', host: 'MERO', users: 16, tag: 'دردشة', color: '#a33c70' },
-  { name: 'عالم التحديات 🎮', host: 'SULTAN', users: 12, tag: 'ألعاب', color: '#286b83' },
-  { name: 'VIP Lounge 👑', host: 'NOOR', users: 35, tag: 'VIP', color: '#98732d' },
+  { name: 'سهرة النجوم ⭐', host: 'MO', users: 28 },
+  { name: 'لمة الأصدقاء ❤️', host: 'MERO', users: 16 },
+  { name: 'عالم التحديات 🎮', host: 'SULTAN', users: 12 },
+  { name: 'VIP Lounge 👑', host: 'NOOR', users: 35 },
 ]
 
-const games = ['🎲 لودو', '🎱 بلياردو', '🌾 المزرعة', '🎡 عجلة الحظ']
-
+const styles = `
+*{box-sizing:border-box}
+body{margin:0;background:#100d18;color:#fff;font-family:Arial,sans-serif}
+.app{max-width:1100px;margin:auto;padding:18px 14px 90px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{font-size:27px;font-weight:900;color:#e5bd69}
+.balance{background:#241b31;border:1px solid #7653a0;padding:10px 14px;border-radius:15px;color:#f4d58b}
+nav{display:flex;gap:8px;overflow-x:auto;margin:22px 0;padding-bottom:8px}
+button{cursor:pointer;border:0;color:white;background:#292033;border-radius:12px;padding:12px 15px;font-size:14px}
+button.active,.primary{background:linear-gradient(110deg,#7650a8,#b18a45)}
+h1{font-size:25px;color:#f0d18b}
+h2{font-size:19px;color:#e8c77f}
+p{color:#c5bdce;line-height:1.7}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:13px}
+.card{background:#1c1725;border:1px solid #382a49;border-radius:18px;padding:17px;margin-bottom:13px}
+.hero{background:linear-gradient(120deg,#392451,#171321 70%);border:1px solid #78569b;border-radius:22px;padding:25px;margin:15px 0}
+.big{font-size:35px;font-weight:bold;color:#f0cf85}
+.muted{font-size:12px;color:#aaa0b4}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+input,select{width:100%;background:#110e18;border:1px solid #51405e;color:white;border-radius:10px;padding:12px;margin:7px 0}
+button:disabled{opacity:.5}
+footer{position:fixed;bottom:0;left:0;right:0;background:#17121f;border-top:1px solid #392b48;padding:10px;text-align:center;color:#aaa;font-size:12px}
+.pill{display:inline-block;padding:6px 10px;background:#342643;border-radius:20px;color:#e9cb8a;font-size:12px}
+`
+ 
 export default function App() {
-  const [tab, setTab] = useState('الرئيسية')
-  const [joined, setJoined] = useState('')
-  const [liked, setLiked] = useState(false)
+  const [tab, setTab] = useState<Tab>('home')
+  const [diamonds, setDiamonds] = useState(2500)
+  const [roomSeats, setRoomSeats] = useState(8)
+  const [familyName, setFamilyName] = useState('عائلة النجوم')
+  const [familyLevel] = useState('برونزي')
+  const [familySpent, setFamilySpent] = useState(0)
+  const [transferAmount, setTransferAmount] = useState('')
+  const [receipt, setReceipt] = useState('')
+  const [message, setMessage] = useState('')
+  const [pirate, setPirate] = useState(false)
+
+  const spend = (amount: number) => {
+    if (diamonds < amount) {
+      setMessage('رصيد الماسات غير كافٍ.')
+      return
+    }
+    setDiamonds(diamonds - amount)
+    setFamilySpent(familySpent + amount)
+    setMessage('تم تسجيل العملية في النموذج التجريبي.')
+  }
+
+  const show = (name: Tab) => {
+    setTab(name)
+    setMessage('')
+  }
 
   return (
-    <div className="app">
-      <style>{`
-        *{box-sizing:border-box}
-        body{margin:0;background:#090811;color:#fff;font-family:Arial,sans-serif}
-        button{font:inherit;cursor:pointer}
-        .app{max-width:520px;min-height:100vh;margin:auto;background:#100e1b;padding-bottom:85px;overflow:hidden}
-        .top{padding:20px 17px 15px;background:linear-gradient(130deg,#211637,#11101d);border-bottom:1px solid #342449}
-        .toprow{display:flex;justify-content:space-between;align-items:center}
-        .logo{font-size:25px;font-weight:900;color:#f5d58b;letter-spacing:1px}
-        .sub{font-size:11px;color:#b8a9ca;margin-top:5px}
-        .coins{background:#2b2039;border:1px solid #71518d;padding:10px 13px;border-radius:22px;color:#f5d58b;font-weight:bold}
-        .profile{display:flex;align-items:center;gap:12px;margin-top:20px}
-        .avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(140deg,#b78b43,#5e347f);border:2px solid #e9c778;font-weight:bold}
-        .muted{color:#a99db7;font-size:12px}
-        .section{padding:17px}
-        .heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-        .heading h3{margin:0;font-size:17px}
-        .gold{color:#f3ce82}
-        .banner{padding:20px;border-radius:18px;background:linear-gradient(120deg,#392052,#17182d 70%,#594022);border:1px solid #76518c;position:relative;overflow:hidden}
-        .banner h2{margin:0 0 8px;font-size:22px}
-        .banner p{font-size:12px;color:#d0c2dc;margin:0 0 15px}
-        .action{border:0;border-radius:20px;padding:10px 17px;background:linear-gradient(100deg,#e9c77c,#a87835);color:#24182a;font-weight:bold}
-        .bannerIcon{position:absolute;right:15px;top:22px;font-size:60px;opacity:.8}
-        .quick{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:15px}
-        .quick button{background:#201a2d;border:1px solid #392c4b;border-radius:14px;padding:13px 3px;color:white;font-size:12px}
-        .quick span{display:block;font-size:24px;margin-bottom:7px}
-        .room{display:flex;align-items:center;gap:12px;padding:12px;background:#1c1828;border:1px solid #30253e;border-radius:15px;margin-bottom:10px}
-        .roomart{width:57px;height:57px;border-radius:13px;display:grid;place-items:center;font-size:25px;flex-shrink:0}
-        .roominfo{flex:1;min-width:0}
-        .roominfo b{font-size:14px}
-        .roominfo small{display:block;color:#a99db7;margin-top:7px;font-size:11px}
-        .join{background:#30213f;color:#f4d58e;border:1px solid #77558b;border-radius:20px;padding:9px 13px;font-size:12px}
-        .chips{display:flex;gap:8px;overflow:auto;padding-bottom:5px}
-        .chip{white-space:nowrap;background:#211b2e;border:1px solid #3a2d4b;color:#d6c7e5;border-radius:18px;padding:9px 14px;font-size:12px}
-        .gamegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-        .game{background:linear-gradient(140deg,#29203a,#171522);border:1px solid #40304f;border-radius:15px;padding:18px 12px;text-align:center;font-weight:bold}
-        .game span{font-size:32px;display:block;margin-bottom:9px}
-        .bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:#171321;border-top:1px solid #443451;display:flex;justify-content:space-around;padding:11px 4px calc(11px + env(safe-area-inset-bottom));z-index:5}
-        .nav{background:none;border:0;color:#968ba5;font-size:10px;min-width:54px}
-        .nav span{display:block;font-size:21px;margin-bottom:5px}
-        .nav.active{color:#f0cb7d}
-        .notice{background:#251d32;border:1px solid #604778;color:#e5d4f1;border-radius:12px;padding:12px;font-size:12px;margin-top:12px}
-        .empty{text-align:center;padding:45px 15px;color:#b6a9c3}
-      `}</style>
-
-      <header className="top">
-        <div className="toprow">
+    <>
+      <style>{styles}</style>
+      <div className="app">
+        <header>
           <div>
-            <div className="logo">👑 DN-HALO</div>
-            <div className="sub">عالمك.. أصدقاءك.. لحظاتك</div>
+            <div className="logo">✦ DN-HALO ✦</div>
+            <div className="muted">عالمك، أصدقاؤك، وحكايتك</div>
           </div>
-          <div className="coins">💎 2,500</div>
-        </div>
-        <div className="profile">
-          <div className="avatar">MO</div>
+          <div className="balance">💎 {diamonds.toLocaleString('en-US')}</div>
+        </header>
+
+        <nav>
+          {([
+            ['home','الرئيسية'],
+            ['rooms','الغرف'],
+            ['family','العائلات'],
+            ['pirate','القرصان'],
+            ['wallet','شحن الماسات'],
+            ['friends','أصدقائي'],
+          ] as [Tab,string][]).map(([id,label]) => (
+            <button key={id} className={tab===id?'active':''} onClick={()=>show(id)}>{label}</button>
+          ))}
+        </nav>
+
+        {message && <div className="card">{message}</div>}
+
+        {tab==='home' && <>
+          <div className="hero">
+            <span className="pill">مرحبًا بك في DN-HALO</span>
+            <h1>عالم يجمع الأصدقاء 💜</h1>
+            <p>ادخل الغرف، قابل أصدقاء جدد، كوّن عائلتك، واستمتع بالتجربة.</p>
+            <button className="primary" onClick={()=>show('rooms')}>اكتشف الغرف</button>
+          </div>
+          <div className="grid">
+            <div className="card"><h2>💎 محفظتي</h2><div className="big">{diamonds.toLocaleString('en-US')}</div><p>رصيد الماسات التجريبي</p><button onClick={()=>show('wallet')}>تفاصيل الشحن</button></div>
+            <div className="card"><h2>👑 عائلتي</h2><div className="big">{familyLevel}</div><p>{familyName}</p><button onClick={()=>show('family')}>دخول العائلة</button></div>
+            <div className="card"><h2>🏴‍☠️ القرصان</h2><p>إيموشانات وإطار ودخولية مميزة.</p><button onClick={()=>show('pirate')}>اكتشف المميزات</button></div>
+          </div>
+        </>}
+
+        {tab==='rooms' && <>
+          <h1>🎙️ الغرف الصوتية</h1>
+          <div className="card">
+            <h2>إعداد مقاعد الغرفة</h2>
+            <p>الاختيار الافتراضي 8 مقاعد. يمكنك تجربة تخطيطات أخرى.</p>
+            <div className="row">
+              {[8,12,2].map(n=><button key={n} className={roomSeats===n?'active':''} onClick={()=>setRoomSeats(n)}>{n===2?'كرسيان متجاوران':`${n} كرسي`}</button>)}
+            </div>
+            <p>التخطيط المختار: <b>{roomSeats===2?'كرسيان متجاوران':`${roomSeats} كرسي`}</b></p>
+            <div className="grid">
+              {Array.from({length:roomSeats},(_,i)=><div className="card" key={i} style={{textAlign:'center',margin:0}}>🎤<p>مقعد {i+1}</p></div>)}
+            </div>
+            <p className="muted">المقاعد هنا للعرض التجريبي فقط، وليست اتصالًا صوتيًا حقيقيًا.</p>
+          </div>
+          <div className="grid">
+            {rooms.map(room=><div className="card" key={room.name}>
+              <h2>{room.name}</h2>
+              <p>المضيف: {room.host}</p>
+              <p>👥 {room.users} مستخدم</p>
+              <button className="primary" onClick={()=>setMessage('دخول الغرفة الصوتية يحتاج إلى خادم صوتي.')}>دخول الغرفة</button>
+            </div>)}
+          </div>
+        </>}
+
+        {tab==='family' && <>
+          <h1>👑 نظام العائلات</h1>
+          <div className="card">
+            <label>اسم العائلة</label>
+            <input value={familyName} onChange={e=>setFamilyName(e.target.value)} />
+            <div className="row"><span>مستوى العائلة</span><span className="pill">{familyLevel}</span></div>
+            <h2>💎 إجمالي الماسات المصروفة</h2>
+            <div className="big">{familySpent.toLocaleString('en-US')}</div>
+            <p>تُجمع مساهمات جميع أفراد العائلة في النظام النهائي.</p>
+          </div>
+          <div className="grid">
+            {['ماسي 💎','فضي 🥈','برونزي 🥉','تاجي 👑','ذهبي 🏆'].map(level=><div className="card" key={level}><h2>{level}</h2><p>مستوى من مستويات العائلات.</p></div>)}
+          </div>
+          <div className="card">
+            <h2>مساهمات أفراد العائلة</h2>
+            <p>الهدايا المرسلة للأشخاص والصناديق داخل روم العائلة تدخل في حساب التقدم.</p>
+            <p className="muted">عرض مساهمات كل عضو وتحديث المستوى يحتاجان إلى قاعدة بيانات مشتركة.</p>
+          </div>
+        </>}
+
+        {tab==='pirate' && <>
+          <div className="hero">
+            <div className="big">🏴‍☠️ القرصان</div>
+            <h1>عضوية القرصان</h1>
+            <div className="big">360,000 💎</div>
+            <p>اشتراك لمدة 30 يومًا، والتجديد اختياري كل شهر.</p>
+            <button className="primary" onClick={()=>spend(360000)} disabled={pirate}>تفعيل تجريبي</button>
+            {pirate && <span className="pill">تم التفعيل في النموذج التجريبي</span>}
+          </div>
+          <div className="grid">
+            <div className="card"><h2>✨ إيموشانات الغرف</h2><p>تأثيرات خاصة تظهر داخل الغرف.</p></div>
+            <div className="card"><h2>👀 مشاهدات الملف</h2><p>عرض سجل من شاهد ملفك الشخصي، وفق إعدادات الخصوصية.</p></div>
+            <div className="card"><h2>🖼️ إطار حصري</h2><p>إطار مميز للملف الشخصي.</p></div>
+            <div className="card"><h2>🌟 دخولية حصرية</h2><p>تأثير دخول متحرك للغرف.</p></div>
+          </div>
+          <p className="muted">التفعيل هنا تجريبي، ولا يوجد خصم أو اشتراك حقيقي حتى ربط الخادم.</p>
+        </>}
+
+        {tab==='wallet' && <>
+          <h1>💎 شحن الماسات</h1>
+          <div className="card">
+            <h2>فودافون كاش</h2>
+            <p>رقم استقبال التحويل:</p>
+            <div className="big">01041170314</div>
+            <button onClick={()=>navigator.clipboard?.writeText('01041170314')}>نسخ الرقم</button>
+            <p className="muted">تأكد من ملكية المحفظة وموافقة صاحبها قبل استقبال أي تحويلات.</p>
+          </div>
+          <div className="card">
+            <h2>إرسال طلب شحن</h2>
+            <label>المبلغ المحوّل بالجنيه</label>
+            <input type="number" min="1" value={transferAmount} onChange={e=>setTransferAmount(e.target.value)} placeholder="اكتب المبلغ" />
+            <label>رقم العملية أو مرجع التحويل</label>
+            <input value={receipt} onChange={e=>setReceipt(e.target.value)} placeholder="اكتب رقم مرجع التحويل" />
+            <button className="primary" onClick={()=>setMessage(transferAmount && receipt ? 'تم تجهيز طلب الشحن التجريبي. لا يتم اعتماد الدفع أو إضافة الماسات تلقائيًا في هذه النسخة.' : 'اكتب المبلغ ورقم مرجع التحويل أولًا.')}>إرسال طلب الشحن</button>
+          </div>
+          <p className="muted">لا توجد باقات أو أسعار شحن مضافة هنا؛ نحتاج جدول الأسعار المتفق عليه، وربط مزود دفع آمن ومراجعة الطلبات قبل إضافة الماسات.</p>
+        </>}
+
+        {tab==='friends' && <>
+          <h1>👥 أصدقائي</h1>
+          <div className="card">
+            <h2>الشخصيات الذكية</h2>
+            <p>شخصيات افتراضية للدردشة باللهجة المصرية، مع توضيح أنها ذكاء اصطناعي وليست أشخاصًا حقيقيين.</p>
+            <button className="primary" onClick={()=>setMessage('قسم الشخصيات الذكية يحتاج إلى ربط نموذج محادثة وخادم.')}>ابدأ محادثة تجريبية</button>
+          </div>
+          <div className="card">
+            <h2>🛡️ الأمان والمخالفات</h2>
+            <p>نظام آلي لمراجعة المحتوى المخالف، مع سجل للأسباب وإمكانية الاعتراض على القرارات.</p>
+            <p className="muted">لا يتم تطبيق حظر فعلي في هذه الواجهة. يلزم نظام مراجعة خلفي واختبار دقة الكشف قبل التشغيل.</p>
+          </div>
+        </>}
+      </div>
+      <footer>DN-HALO © تجربة أولية — المزايا والخدمات الحقيقية تحتاج إلى خادم</footer>
+    </>
+  )
+      }
+import React, { useState } from 'react'
+
+type Tab = 'home' | 'rooms' | 'family' | 'pirate' | 'wallet' | 'friends'
+
+const rooms = [
+  { name: 'سهرة النجوم ⭐', host: 'MO', users: 28 },
+  { name: 'لمة الأصدقاء ❤️', host: 'MERO', users: 16 },
+  { name: 'عالم التحديات 🎮', host: 'SULTAN', users: 12 },
+  { name: 'VIP Lounge 👑', host: 'NOOR', users: 35 },
+]
+
+const styles = `
+*{box-sizing:border-box}
+body{margin:0;background:#100d18;color:#fff;font-family:Arial,sans-serif}
+.app{max-width:1100px;margin:auto;padding:18px 14px 90px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{font-size:27px;font-weight:900;color:#e5bd69}
+.balance{background:#241b31;border:1px solid #7653a0;padding:10px 14px;border-radius:15px;color:#f4d58b}
+nav{display:flex;gap:8px;overflow-x:auto;margin:22px 0;padding-bottom:8px}
+button{cursor:pointer;border:0;color:white;background:#292033;border-radius:12px;padding:12px 15px;font-size:14px}
+button.active,.primary{background:linear-gradient(110deg,#7650a8,#b18a45)}
+h1{font-size:25px;color:#f0d18b}
+h2{font-size:19px;color:#e8c77f}
+p{color:#c5bdce;line-height:1.7}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:13px}
+.card{background:#1c1725;border:1px solid #382a49;border-radius:18px;padding:17px;margin-bottom:13px}
+.hero{background:linear-gradient(120deg,#392451,#171321 70%);border:1px solid #78569b;border-radius:22px;padding:25px;margin:15px 0}
+.big{font-size:35px;font-weight:bold;color:#f0cf85}
+.muted{font-size:12px;color:#aaa0b4}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+input,select{width:100%;background:#110e18;border:1px solid #51405e;color:white;border-radius:10px;padding:12px;margin:7px 0}
+button:disabled{opacity:.5}
+footer{position:fixed;bottom:0;left:0;right:0;background:#17121f;border-top:1px solid #392b48;padding:10px;text-align:center;color:#aaa;font-size:12px}
+.pill{display:inline-block;padding:6px 10px;background:#342643;border-radius:20px;color:#e9cb8a;font-size:12px}
+`
+ 
+export default function App() {
+  const [tab, setTab] = useState<Tab>('home')
+  const [diamonds, setDiamonds] = useState(2500)
+  const [roomSeats, setRoomSeats] = useState(8)
+  const [familyName, setFamilyName] = useState('عائلة النجوم')
+  const [familyLevel] = useState('برونزي')
+  const [familySpent, setFamilySpent] = useState(0)
+  const [transferAmount, setTransferAmount] = useState('')
+  const [receipt, setReceipt] = useState('')
+  const [message, setMessage] = useState('')
+  const [pirate, setPirate] = useState(false)
+
+  const spend = (amount: number) => {
+    if (diamonds < amount) {
+      setMessage('رصيد الماسات غير كافٍ.')
+      return
+    }
+    setDiamonds(diamonds - amount)
+    setFamilySpent(familySpent + amount)
+    setMessage('تم تسجيل العملية في النموذج التجريبي.')
+  }
+
+  const show = (name: Tab) => {
+    setTab(name)
+    setMessage('')
+  }
+
+  return (
+    <>
+      <style>{styles}</style>
+      <div className="app">
+        <header>
           <div>
-            <b>أهلاً بك في DN-HALO</b>
-            <div className="muted">مستوى 1 · عضو جديد</div>
+            <div className="logo">✦ DN-HALO ✦</div>
+            <div className="muted">عالمك، أصدقاؤك، وحكايتك</div>
           </div>
-          <div style={{marginLeft:'auto',fontSize:23}}>🔔</div>
-        </div>
-      </header>
+          <div className="balance">💎 {diamonds.toLocaleString('en-US')}</div>
+        </header>
 
-      {tab === 'الرئيسية' && <>
-        <section className="section">
-          <div className="banner">
-            <div className="bannerIcon">👑</div>
-            <h2>عالمك يبدأ من هنا</h2>
-            <p>ادخل غرفتك المفضلة وتعرف على أصدقاء جدد</p>
-            <button className="action" onClick={() => setTab('الغرف')}>اكتشف الغرف ←</button>
+        <nav>
+          {([
+            ['home','الرئيسية'],
+            ['rooms','الغرف'],
+            ['family','العائلات'],
+            ['pirate','القرصان'],
+            ['wallet','شحن الماسات'],
+            ['friends','أصدقائي'],
+          ] as [Tab,string][]).map(([id,label]) => (
+            <button key={id} className={tab===id?'active':''} onClick={()=>show(id)}>{label}</button>
+          ))}
+        </nav>
+
+        {message && <div className="card">{message}</div>}
+
+        {tab==='home' && <>
+          <div className="hero">
+            <span className="pill">مرحبًا بك في DN-HALO</span>
+            <h1>عالم يجمع الأصدقاء 💜</h1>
+            <p>ادخل الغرف، قابل أصدقاء جدد، كوّن عائلتك، واستمتع بالتجربة.</p>
+            <button className="primary" onClick={()=>show('rooms')}>اكتشف الغرف</button>
           </div>
-          <div className="quick">
-            <button onClick={() => setTab('الغرف')}><span>🎙️</span>الغرف</button>
-            <button onClick={() => setTab('الألعاب')}><span>🎮</span>الألعاب</button>
-            <button onClick={() => setTab('المتجر')}><span>🎁</span>الهدايا</button>
-            <button onClick={() => setTab('أصدقائي')}><span>👥</span>الأصدقاء</button>
+          <div className="grid">
+            <div className="card"><h2>💎 محفظتي</h2><div className="big">{diamonds.toLocaleString('en-US')}</div><p>رصيد الماسات التجريبي</p><button onClick={()=>show('wallet')}>تفاصيل الشحن</button></div>
+            <div className="card"><h2>👑 عائلتي</h2><div className="big">{familyLevel}</div><p>{familyName}</p><button onClick={()=>show('family')}>دخول العائلة</button></div>
+            <div className="card"><h2>🏴‍☠️ القرصان</h2><p>إيموشانات وإطار ودخولية مميزة.</p><button onClick={()=>show('pirate')}>اكتشف المميزات</button></div>
           </div>
-        </section>
+        </>}
 
-        <section className="section">
-          <div className="heading"><h3>🔥 الغرف المميزة</h3><span className="muted">عرض الكل</span></div>
-          {rooms.slice(0,3).map(room => <div className="room" key={room.name}>
-            <div className="roomart" style={{background:room.color}}>🎙️</div>
-            <div className="roominfo"><b>{room.name}</b><small>👑 {room.host} · 👥 {room.users} متصل</small></div>
-            <button className="join" onClick={() => {setJoined(room.name);setTab('الغرف')}}>دخول</button>
-          </div>)}
-        </section>
+        {tab==='rooms' && <>
+          <h1>🎙️ الغرف الصوتية</h1>
+          <div className="card">
+            <h2>إعداد مقاعد الغرفة</h2>
+            <p>الاختيار الافتراضي 8 مقاعد. يمكنك تجربة تخطيطات أخرى.</p>
+            <div className="row">
+              {[8,12,2].map(n=><button key={n} className={roomSeats===n?'active':''} onClick={()=>setRoomSeats(n)}>{n===2?'كرسيان متجاوران':`${n} كرسي`}</button>)}
+            </div>
+            <p>التخطيط المختار: <b>{roomSeats===2?'كرسيان متجاوران':`${roomSeats} كرسي`}</b></p>
+            <div className="grid">
+              {Array.from({length:roomSeats},(_,i)=><div className="card" key={i} style={{textAlign:'center',margin:0}}>🎤<p>مقعد {i+1}</p></div>)}
+            </div>
+            <p className="muted">المقاعد هنا للعرض التجريبي فقط، وليست اتصالًا صوتيًا حقيقيًا.</p>
+          </div>
+          <div className="grid">
+            {rooms.map(room=><div className="card" key={room.name}>
+              <h2>{room.name}</h2>
+              <p>المضيف: {room.host}</p>
+              <p>👥 {room.users} مستخدم</p>
+              <button className="primary" onClick={()=>setMessage('دخول الغرفة الصوتية يحتاج إلى خادم صوتي.')}>دخول الغرفة</button>
+            </div>)}
+          </div>
+        </>}
 
-        <section className="section">
-          <div className="heading"><h3>🎮 منطقة الألعاب</h3><span className="muted">اكتشف</span></div>
-          <div className="gamegrid">{games.map(g=><button className="game" key={g} onClick={()=>setTab('الألعاب')}>{g}</button>)}</div>
-        </section>
-      </>}
+        {tab==='family' && <>
+          <h1>👑 نظام العائلات</h1>
+          <div className="card">
+            <label>اسم العائلة</label>
+            <input value={familyName} onChange={e=>setFamilyName(e.target.value)} />
+            <div className="row"><span>مستوى العائلة</span><span className="pill">{familyLevel}</span></div>
+            <h2>💎 إجمالي الماسات المصروفة</h2>
+            <div className="big">{familySpent.toLocaleString('en-US')}</div>
+            <p>تُجمع مساهمات جميع أفراد العائلة في النظام النهائي.</p>
+          </div>
+          <div className="grid">
+            {['ماسي 💎','فضي 🥈','برونزي 🥉','تاجي 👑','ذهبي 🏆'].map(level=><div className="card" key={level}><h2>{level}</h2><p>مستوى من مستويات العائلات.</p></div>)}
+          </div>
+          <div className="card">
+            <h2>مساهمات أفراد العائلة</h2>
+            <p>الهدايا المرسلة للأشخاص والصناديق داخل روم العائلة تدخل في حساب التقدم.</p>
+            <p className="muted">عرض مساهمات كل عضو وتحديث المستوى يحتاجان إلى قاعدة بيانات مشتركة.</p>
+          </div>
+        </>}
 
-      {tab === 'الغرف' && <section className="section">
-        <div className="heading"><h3>🎙️ الغرف الصوتية</h3><span className="gold">مباشر الآن</span></div>
-        <div className="chips">{['الكل','دردشة','ألعاب','VIP','أصدقاء'].map(x=><button className="chip" key={x}>{x}</button>)}</div>
-        {rooms.map(room=><div className="room" key={room.name}>
-          <div className="roomart" style={{background:room.color}}>🎙️</div>
-          <div className="roominfo"><b>{room.name}</b><small>👑 {room.host} · 👥 {room.users} متصل · {room.tag}</small></div>
-          <button className="join" onClick={()=>setJoined(room.name)}>دخول</button>
-        </div>)}
-        {joined && <div className="notice">اخترت غرفة: {joined}. واجهة الغرفة الصوتية التفصيلية هنبنيها في الخطوة التالية.</div>}
-      </section>}
+        {tab==='pirate' && <>
+          <div className="hero">
+            <div className="big">🏴‍☠️ القرصان</div>
+            <h1>عضوية القرصان</h1>
+            <div className="big">360,000 💎</div>
+            <p>اشتراك لمدة 30 يومًا، والتجديد اختياري كل شهر.</p>
+            <button className="primary" onClick={()=>spend(360000)} disabled={pirate}>تفعيل تجريبي</button>
+            {pirate && <span className="pill">تم التفعيل في النموذج التجريبي</span>}
+          </div>
+          <div className="grid">
+            <div className="card"><h2>✨ إيموشانات الغرف</h2><p>تأثيرات خاصة تظهر داخل الغرف.</p></div>
+            <div className="card"><h2>👀 مشاهدات الملف</h2><p>عرض سجل من شاهد ملفك الشخصي، وفق إعدادات الخصوصية.</p></div>
+            <div className="card"><h2>🖼️ إطار حصري</h2><p>إطار مميز للملف الشخصي.</p></div>
+            <div className="card"><h2>🌟 دخولية حصرية</h2><p>تأثير دخول متحرك للغرف.</p></div>
+          </div>
+          <p className="muted">التفعيل هنا تجريبي، ولا يوجد خصم أو اشتراك حقيقي حتى ربط الخادم.</p>
+        </>}
 
-      {tab === 'الألعاب' && <section className="section">
-        <div className="heading"><h3>🎮 الألعاب والمرح</h3></div>
-        <div className="gamegrid">{games.map(g=><button className="game" key={g} onClick={()=>setJoined(g)}>{g}<small className="muted" style={{display:'block',marginTop:8}}>قريباً</small></button>)}</div>
-        <div className="notice">الألعاب دي واجهات مبدئية، ولسه هنبرمج اللعب الحقيقي والاتصال بين الأصدقاء.</div>
-      </section>}
+        {tab==='wallet' && <>
+          <h1>💎 شحن الماسات</h1>
+          <div className="card">
+            <h2>فودافون كاش</h2>
+            <p>رقم استقبال التحويل:</p>
+            <div className="big">01041170314</div>
+            <button onClick={()=>navigator.clipboard?.writeText('01041170314')}>نسخ الرقم</button>
+            <p className="muted">تأكد من ملكية المحفظة وموافقة صاحبها قبل استقبال أي تحويلات.</p>
+          </div>
+          <div className="card">
+            <h2>إرسال طلب شحن</h2>
+            <label>المبلغ المحوّل بالجنيه</label>
+            <input type="number" min="1" value={transferAmount} onChange={e=>setTransferAmount(e.target.value)} placeholder="اكتب المبلغ" />
+            <label>رقم العملية أو مرجع التحويل</label>
+            <input value={receipt} onChange={e=>setReceipt(e.target.value)} placeholder="اكتب رقم مرجع التحويل" />
+            <button className="primary" onClick={()=>setMessage(transferAmount && receipt ? 'تم تجهيز طلب الشحن التجريبي. لا يتم اعتماد الدفع أو إضافة الماسات تلقائيًا في هذه النسخة.' : 'اكتب المبلغ ورقم مرجع التحويل أولًا.')}>إرسال طلب الشحن</button>
+          </div>
+          <p className="muted">لا توجد باقات أو أسعار شحن مضافة هنا؛ نحتاج جدول الأسعار المتفق عليه، وربط مزود دفع آمن ومراجعة الطلبات قبل إضافة الماسات.</p>
+        </>}
 
-      {tab === 'المتجر' && <section className="section">
-        <div className="heading"><h3>🎁 متجر DN-HALO</h3></div>
-        <div className="banner"><h2>متجر الماسات</h2><p>هدايا وإطارات ودخوليات مميزة</p><div className="gold">💎 رصيدك التجريبي: 2,500</div></div>
-        {['🎁 الهدايا','🖼️ الإطارات','✨ الدخوليات','👑 عضوية VIP'].map(x=><div className="room" key={x}><b>{x}</b><span className="muted" style={{marginLeft:'auto'}}>قريباً</span></div>)}
-      </section>}
-
-      {tab === 'أصدقائي' && <section className="section">
-        <div className="heading"><h3>👥 أصدقائي</h3></div>
-        <div className="empty">👥<h3>قائمة أصدقائك</h3><p>هنا هتظهر قائمة أصدقائك وحالة اتصالهم.</p></div>
-      </section>}
-
-      {tab === 'حسابي' && <section className="section">
-        <div className="empty"><div className="avatar" style={{margin:'auto',width:75,height:75}}>MO</div><h2>ملفي الشخصي</h2><p>مستوى 1 · عضو DN-HALO</p><p className="gold">💎 2,500 ماسة تجريبية</p><button className="action" onClick={()=>setLiked(!liked)}>{liked?'⭐ تمت الإضافة':'⭐ إضافة للمفضلة'}</button></div>
-      </section>}
-
-      <nav className="bottom">
-        {[['الرئيسية','🏠'],['الغرف','🎙️'],['الألعاب','🎮'],['المتجر','🎁'],['حسابي','👤']].map(([name,emoji])=><button key={name} className={'nav '+(tab===name?'active':'')} onClick={()=>setTab(name)}><span>{emoji}</span>{name}</button>)}
-      </nav>
-    </div>
+        {tab==='friends' && <>
+          <h1>👥 أصدقائي</h1>
+          <div className="card">
+            <h2>الشخصيات الذكية</h2>
+            <p>شخصيات افتراضية للدردشة باللهجة المصرية، مع توضيح أنها ذكاء اصطناعي وليست أشخاصًا حقيقيين.</p>
+            <button className="primary" onClick={()=>setMessage('قسم الشخصيات الذكية يحتاج إلى ربط نموذج محادثة وخادم.')}>ابدأ محادثة تجريبية</button>
+          </div>
+          <div className="card">
+            <h2>🛡️ الأمان والمخالفات</h2>
+            <p>نظام آلي لمراجعة المحتوى المخالف، مع سجل للأسباب وإمكانية الاعتراض على القرارات.</p>
+            <p className="muted">لا يتم تطبيق حظر فعلي في هذه الواجهة. يلزم نظام مراجعة خلفي واختبار دقة الكشف قبل التشغيل.</p>
+          </div>
+        </>}
+      </div>
+      <footer>DN-HALO © تجربة أولية — المزايا والخدمات الحقيقية تحتاج إلى خادم</footer>
+    </>
   )
 }
