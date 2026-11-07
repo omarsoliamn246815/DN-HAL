@@ -9,24 +9,53 @@ import './style.css'
 function Root() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (!error) setSession(data.session)
-      setLoading(false)
-    })
+    let active = true
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession)
-    })
+    supabase.auth.getSession()
+      .then(({ data, error }) => {
+        if (!active) return
+        if (error) setError(error.message)
+        else setSession(data.session)
+      })
+      .catch((err) => {
+        if (active) {
+          setError(err instanceof Error ? err.message : 'حدث خطأ في الاتصال')
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
 
-    return () => subscription.unsubscribe()
+    const { data: { subscription } } =
+      supabase.auth.onAuthStateChange((_event, session) => {
+        setSession(session)
+      })
+
+    return () => {
+      active = false
+      subscription.unsubscribe()
+    }
   }, [])
 
+  if (error) {
+    return (
+      <div dir="rtl" style={{ background: '#100d18', color: '#fff', minHeight: '100vh', padding: 25 }}>
+        <h2 style={{ color: '#e5bd69' }}>DN-HALO</h2>
+        <p>حصل خطأ أثناء التشغيل:</p>
+        <p>{error}</p>
+      </div>
+    )
+  }
+
   if (loading) {
-    return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#100d18', color: '#e5bd69' }}>جاري التحميل...</div>
+    return (
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#100d18', color: '#e5bd69' }}>
+        جاري التحميل...
+      </div>
+    )
   }
 
   return session ? <App /> : <Auth onLogin={() => {}} />
